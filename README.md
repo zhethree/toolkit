@@ -4,7 +4,7 @@ Personal toolkit - scripts, utilities, and automation.
 
 ## Structure
 
-```
+```text
 toolkit/
 ├── scripts/
 │   ├── python/       # Python utilities
