@@ -1,0 +1,51 @@
+name: Novel Writing Quality Check
+
+on:
+  push:
+    paths:
+      - 'novels/**'
+      - '**.md'
+  workflow_dispatch:
+
+jobs:
+  quality-check:
+    name: Novel Quality Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check Chinese characters ratio
+        run: |
+          echo "📝 检查中文字符比例..."
+          find novels/ -name "*.md" -type f | head -5 | while read f; do
+            total=$(wc -m < "$f")
+            chinese=$(grep -o '[一-龥]' "$f" | wc -l)
+            ratio=$(echo "scale=2; $chinese / $total * 100" | bc)
+            echo "$f: 中文字符占比 ${ratio}%"
+          done
+      
+      - name: Check chapter numbering
+        run: |
+          echo "📚 检查章节编号连续性..."
+          find novels/ -name "第*章*.md" -type f | sort | head -10
+      
+      - name: Word count statistics
+        run: |
+          echo "📊 字数统计..."
+          find novels/ -name "*.md" -type f | while read f; do
+            chars=$(wc -m < "$f")
+            echo "$f: ${chars} 字"
+          done
+
+  backup:
+    name: Backup Novel Drafts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Create backup tag
+        if: github.event_name == 'push'
+        run: |
+          date_tag=$(date +%Y%m%d-%H%M%S)
+          git tag "backup-novel-$date_tag"
+          echo "🏷️ 创建备份标签: backup-novel-$date_tag"
